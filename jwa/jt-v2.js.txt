@@ -1,0 +1,144 @@
+;(function(){
+/* Japan with Amit · "timetable" tables (時刻表). Progressive enhancement: the <table> stays in the HTML. */
+var CSS = [
+'.tt{margin:18px 0 8px}',
+'.tt table{width:100%;border-collapse:collapse;font-size:15.5px;background:none;margin:0;min-width:0;border-top:2px solid #ECE6E0;border-bottom:2px solid #ECE6E0}',
+'.tt table th,.tt table td{border:0;background:none!important;text-align:right;vertical-align:top;padding:13px 0;padding-inline-end:14px;line-height:1.6;color:#D9D0CA}',
+'.tt table th:last-child,.tt table td:last-child{padding-inline-end:0}',
+'.tt table thead th,.tt table tr.jh>*{font-size:13px;font-weight:500;color:#A69A94;padding-top:10px;padding-bottom:8px;border-bottom:1px solid #ECE6E0;line-height:1.3;vertical-align:bottom}',
+'.tt small.jp{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:10.5px;color:#7D716C;font-weight:500;letter-spacing:.08em;margin-top:2px}',
+'.tt table tbody tr+tr>*{border-top:1px solid #2E272B}',
+'.tt table tbody tr>:first-child{color:#ECE6E0;font-weight:700}',
+'.tt table td.n,.tt table th.n{text-align:left;font-variant-numeric:tabular-nums;color:#ECE6E0;font-weight:500;white-space:nowrap}',
+'.tt table td.l>.jv{direction:ltr;unicode-bidi:isolate}',
+'.tt .mk{display:inline-block;width:1.1em;font-weight:700;color:#A69A94}',
+'.tt .mk.ok{color:#E8463F}',
+'@media (max-width:640px){',
+'.tt table,.tt table tbody,.tt table tr{display:block}',
+'.tt table thead,.tt table tr.jh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}',
+'.tt table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;row-gap:2px;padding:12px 0}',
+'.tt table tbody tr+tr{border-top:1px solid #2E272B}',
+'.tt table tbody tr>*{display:block;padding:0!important;border:0!important}',
+'.tt table tbody tr>:first-child{grid-column:1/-1;font-size:16.5px;margin-bottom:4px}',
+'.tt table tbody tr>:not(:first-child){display:contents}',
+'.tt table tbody tr>:not(:first-child)::before{content:attr(data-label);color:#8E827C;font-size:13px;font-weight:400;padding:3px 0}',
+'.tt table tbody tr>:not(:first-child)>.jv{padding:3px 0;font-size:15px;text-align:left}',
+'.tt table tbody tr>.tx>.jv{grid-column:1/-1;text-align:right;padding-top:0;margin-top:-2px}',
+'.tt table tbody tr>.tx::before{grid-column:1/-1}',
+'}',
+/* station signs */
+'.ss-pick{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;border-top:2px solid #ECE6E0;border-bottom:2px solid #ECE6E0;margin:18px 0 8px;font-size:15.5px;line-height:1.5}',
+'.ss-pick>*{padding:11px 0}.ss-pick>:nth-child(n+3){border-top:1px solid #2E272B}',
+'.ss-pick>:nth-child(odd){color:#BDB2AC}.ss-pick>:nth-child(even){color:#ECE6E0;font-weight:700;text-align:left}',
+'.ss{margin:12px 0 8px}',
+'.ss-s{padding:26px 0 6px}',
+'.ss-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}',
+'.ss-nm h3{margin:0;font-size:clamp(32px,6vw,40px);font-weight:900;color:#ECE6E0;line-height:1.05}',
+'.ss-nm p{margin:8px 0 0!important;display:flex;gap:10px;align-items:baseline;color:#A69A94;font-size:13px;line-height:1.3!important}',
+'.ss-nm p .jp{font-family:"Zen Kaku Gothic New",sans-serif;font-size:17px;color:#D9D0CA;font-weight:700}',
+'.ss-code{flex:none;width:44px;height:50px;border-radius:6px;border:3px solid var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#ECE6E0;color:#141013;line-height:1;direction:ltr}',
+'.ss-code small{font-size:10.5px;font-weight:700}.ss-code b{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}',
+'.ss-band{height:6px;background:var(--c);margin:14px 0}',
+'.ss dl{margin:0;display:grid;grid-template-columns:84px minmax(0,1fr);row-gap:8px;font-size:15.5px;line-height:1.65}',
+'.ss dt{color:#8E827C;font-size:13px;padding-top:2px}.ss dd{margin:0;color:#D9D0CA}.ss dd.con{color:#E9B467}',
+/* departure board */
+'.db{background:#0E0B0D;padding:0 16px;border-top:3px solid #E8463F;margin:18px 0 8px}',
+'.db-r{display:grid;grid-template-columns:minmax(0,1fr) minmax(64px,25%) minmax(84px,27%);gap:12px;padding:13px 0;align-items:baseline}',
+'.db-r+.db-r{border-top:1px solid #2A2427}',
+'.db-h{font-size:12px;color:#A69A94;line-height:1.25;padding:12px 0 9px;border-bottom:1px solid #3A3236}',
+'.db-h small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:10.5px;color:#7D716C;letter-spacing:.08em}',
+'.db-h+.db-r{border-top:0}',
+'.db-d b{display:block;font-size:18px;font-weight:700;color:#F2B544;line-height:1.25}',
+'.db-d b .jp{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:#8E827C;font-weight:500;margin-inline-start:8px}',
+'.db-d span{display:block;margin-top:3px;font-size:13px;color:#A69A94;line-height:1.5}',
+'.db-t,.db-p{font-size:14px;color:#ECE6E0;line-height:1.4;text-align:left}',
+'.db-p{font-variant-numeric:tabular-nums;unicode-bidi:plaintext}','.db-t{unicode-bidi:plaintext}',
+'@media (max-width:640px){.db{margin-inline:calc(var(--gut,20px)*-1)}}',
+/* menu */
+'.mn{border-top:2px solid #ECE6E0;border-bottom:2px solid #ECE6E0;padding:4px 0 10px 40px;margin:18px 0 8px;position:relative}',
+'.mn-t{position:absolute;left:0;top:14px;font-family:"Zen Old Mincho",serif;font-size:26px;color:#E8463F;writing-mode:vertical-rl;line-height:1}',
+'.mn-i{padding:9px 0}',
+'.mn-l{display:flex;align-items:baseline;gap:8px}',
+'.mn-l b{font-size:17px;font-weight:700;color:#ECE6E0}',
+'.mn-l .jp{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;color:#8E827C;white-space:nowrap}',
+'.mn-l i{flex:1;border-bottom:2px dotted #4A4045;transform:translateY(-4px);min-width:16px}',
+'.mn-l span.p{font-size:15.5px;font-weight:500;color:#ECE6E0;font-variant-numeric:tabular-nums;white-space:nowrap;unicode-bidi:plaintext}',
+'.mn-w{margin:2px 0 0!important;font-size:13.5px!important;color:#A69A94;line-height:1.55!important}',
+'.jt-src{display:none!important}'
+].join('');
+
+var JP = [ // header gloss, longest first
+['זמן נסיעה','所要時間'],['הלוך-חזור','往復'],['כיוון אחד','片道'],['לכיוון','片道'],['טווח מחיר','料金'],['מחיר','料金'],['כמה','料金'],
+['מסלול','経路'],['קטע','区間'],['אזור','地域'],['עיירה','温泉地'],['עיר','都市'],['תאריך','日付'],['מתי','時期'],['תקופה','時期'],['עונה','季節'],
+['איפה','場所'],['אירוע','行事'],['יעד','行先'],['מאכל','料理'],['הערה','備考'],['הערות','備考'],['שימו לב','備考'],
+['גיל','年齢'],['מבוגר','大人'],['ילד','小人'],['שעות','時間'],['לילות','泊数'],['בוקר','朝'],['צהריים','昼'],['ערב','夜'],
+['משקעים','降水量'],['מקסימום','最高気温'],['חום ממוצע','最高気温'],['מינימום','最低気温'],['עומס','混雑'],['כרטיס','切符'],
+['מה כולל','内容'],['מתאים','向き'],['למי','向き'],['החיסרון','難点'],['חיסרון','難点'],['תחבורה','交通'],['זמן','時間'],['יום','日'],
+['פס','パス'],['מקדש','寺社'],['מקום','場所'],['פרטים','詳細']];
+function gloss(t){var tk=t.split(/[\s\/()\u2013,]+/);for(var i=0;i<JP.length;i++){var w=JP[i][0];if(/[\s\-]/.test(w)){if(t.indexOf(w)>-1)return JP[i][1];continue}for(var j=0;j<tk.length;j++){var x=tk[j];if(x===w||x==='ה'+w||x==='ו'+w||x==='ב'+w||x==='ל'+w)return JP[i][1]}}return ''}
+
+var AREA = { // kanji · romaji · station code · line colour (codes only where certain)
+"שינג'וקו":['新宿','Shinjuku','JY','17','#80C241'],"שיבויה":['渋谷','Shibuya','JY','20','#80C241'],"אואנו":['上野','Ueno','JY','05','#80C241'],
+"איקבוקורו":['池袋','Ikebukuro','JY','13','#80C241'],"שינאגאווה":['品川','Shinagawa','JY','25','#80C241'],"אקיהבארה":['秋葉原','Akihabara','JY','03','#80C241'],
+"גינזה":['銀座','Ginza','G','09','#F39700'],"אסקוסה":['浅草','Asakusa','G','19','#F39700'],"רופונגי":['六本木','Roppongi','H','04','#9CAEB7'],
+"נאמבה":['難波','Namba','M','20','#E5171F'],"נמבה":['難波','Namba','M','20','#E5171F'],"אומדה":['梅田','Umeda','M','16','#E5171F'],"שין-אוסקה":['新大阪','Shin-Osaka','M','13','#E5171F'],
+"שינסאייבאשי":['心斎橋','Shinsaibashi','M','19','#E5171F'],"שינסאיבאשי":['心斎橋','Shinsaibashi','M','19','#E5171F'],"טנוג'י":['天王寺','Tennoji','M','23','#E5171F'],"טנוג׳י":['天王寺','Tennoji','M','23','#E5171F'],
+"תחנת קיוטו":['京都駅','Kyoto Station'],"קווארמאצ'י":['四条河原町','Shijo-Kawaramachi'],"גיון":['祇園','Gion'],"היגשיאמה":['東山','Higashiyama'],
+"קרסומה":['烏丸','Karasuma'],"קאראסומה":['烏丸','Karasuma'],"ארשיאמה":['嵐山','Arashiyama'],"אראשיאמה":['嵐山','Arashiyama'],"מפרץ":['ベイエリア','Bay Area'],"USJ":['ユニバーサル','Universal City']};
+function area(t){var best=null,bl=0;for(var k in AREA)if(t.indexOf(k)>-1&&k.length>bl){best=AREA[k];bl=k.length}return best}
+var DEST={"האקונה":'箱根',"הקונה":'箱根',"ניקו":'日光',"קמקורה":'鎌倉',"פוג'י":'富士山',"קוואגוצ'יקו":'河口湖',"יוקוהמה":'横浜',"נארה":'奈良',"הימג'י":'姫路',"קובה":'神戸',"אוג'י":'宇治',"הירושימה":'広島',"קויאסאן":'高野山',"קיוטו":'京都',"אוסקה":'大阪'};
+var DISH={"ראמן":'ラーメン',"סובה":'そば・うどん',"אודון":'うどん',"גיודון":'牛丼',"קארי":'カレー',"מסוע":'回転寿司',"סושי":'寿司',"טונקאטסו":'とんかつ',"טמפורה":'天ぷら',"יאקיטורי":'焼き鳥',"אוקונומיאקי":'お好み焼き',"טאקויאקי":'たこ焼き',"וואגיו":'和牛',"קובה":'神戸牛',"קאיסקי":'懐石',"מאצ'ה":'抹茶',"מוצ'י":'餅',"דנגו":'団子',"גיוזה":'餃子',"שאבו":'しゃぶしゃぶ',"סוקיאקי":'すき焼き',"קושיקאטסו":'串カツ',"איזאקאיה":'居酒屋',"בנטו":'弁当',"אוניגירי":'おにぎり',"טונקוטסו":'豚骨',"יאקיניקו":'焼肉',"קאיסנדון":'海鮮丼',"טאיאקי":'たい焼き',"מלון־פאן":'メロンパン'};
+function pick(map,t){var best='',bl=0;for(var k in map)if(t.indexOf(k)>-1&&k.length>bl){best=map[k];bl=k.length}return best}
+
+function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function txt(c){return (c&&c.textContent||'').replace(/\s+/g,' ').trim()}
+function ensureFonts(){if(document.getElementById('tt-font'))return;var l=document.createElement('link');l.id='tt-font';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Old+Mincho:wght@700&display=swap';document.head.appendChild(l)}
+function ensureCss(){if(document.getElementById('tt-css'))return;var s=document.createElement('style');s.id='tt-css';s.textContent=CSS;document.head.appendChild(s)}
+
+function headersOf(t){var hr=t.tHead&&t.tHead.rows[0];var rows=[].slice.call(t.rows);if(!hr&&rows.length&&[].every.call(rows[0].cells,function(c){return c.tagName==='TH'}))hr=rows[0];return {hr:hr,lab:hr?[].map.call(hr.cells,txt):[],body:rows.filter(function(r){return r!==hr&&r.parentNode.tagName!=='THEAD'})}}
+function col(lab,re){for(var i=0;i<lab.length;i++)if(re.test(lab[i]))return i;return -1}
+function hide(t,w){(w||t).classList.add('jt-src')}
+function wrapOf(t){var w=t.parentElement;return (w&&(w.classList.contains('tbl')||w.classList.contains('jt'))&&w.children.length===1)?w:t}
+
+function stations(t,H){var b=H.body,L=H.lab;var iS=col(L,/מתאים|למי/),iT=col(L,/תחבורה/),iP=col(L,/מחיר/),iC=col(L,/חיסרון/);
+ var box=el('div','ss');
+ b.forEach(function(r){var c=r.cells,nm=txt(c[0]),a=area(nm)||[];var colr=a[4]||'#E8463F';
+  var s=el('section','ss-s');s.style.setProperty('--c',colr);
+  var h='<div class="ss-top"><div class="ss-nm"><h3>'+esc(nm)+'</h3>'+(a[0]?'<p><span class="jp">'+a[0]+'</span><span>'+a[1]+'</span></p>':'')+'</div>'+(a[2]?'<div class="ss-code" role="img" aria-label="קוד תחנה '+a[2]+a[3]+'"><small>'+a[2]+'</small><b>'+a[3]+'</b></div>':'')+'</div><div class="ss-band" aria-hidden="true"></div><dl>';
+  [[iS,'מתאים ל'],[iT,'תחבורה'],[iP,'מחיר'],[iC,'חיסרון']].forEach(function(p){if(p[0]>-1&&c[p[0]]&&txt(c[p[0]]))h+='<dt>'+p[1]+'</dt><dd'+(p[1]==='חיסרון'?' class="con"':'')+'>'+c[p[0]].innerHTML+'</dd>'});
+  s.innerHTML=h+'</dl>';box.appendChild(s)});
+ var w=wrapOf(t);w.parentNode.insertBefore(box,w);hide(t,w)}
+
+function pickList(t,H){var box=el('div','ss-pick');H.body.forEach(function(r){var c=r.cells;if(c.length<2)return;box.appendChild(el('span','',c[0].innerHTML));box.appendChild(el('span','',c[1].innerHTML))});var w=wrapOf(t);w.parentNode.insertBefore(box,w);hide(t,w)}
+
+function board(t,H){var L=H.lab,iT=col(L,/זמן/),iP=col(L,/הלוך|מחיר/),iB=col(L,/הכי טוב|מה מיוחד/),iM=col(L,/מינימלי|כמה זמן/),iF=col(L,/יוצאים|מאיפה/);
+ var box=el('div','db');box.innerHTML='<div class="db-r db-h" aria-hidden="true"><span>יעד<small>行先</small></span><span>נסיעה<small>所要</small></span><span>'+esc(iP>-1?L[iP].replace(/\s*\(.*\)/,''):'מחיר')+'<small>'+(/הלוך/.test(L[iP]||'')?'往復':'料金')+'</small></span></div>';
+ H.body.forEach(function(r){var c=r.cells,d=txt(c[0]),k=pick(DEST,d);var sub=[];if(iB>-1&&c[iB])sub.push(txt(c[iB]));if(iF>-1&&c[iF])sub.push('יוצאים מ'+txt(c[iF]).replace(/^מ/,''));if(iM>-1&&c[iM])sub.push(txt(c[iM]));
+  var row=el('div','db-r');row.innerHTML='<div class="db-d"><b>'+esc(d)+(k?'<span class="jp" lang="ja">'+k+'</span>':'')+'</b><span>'+esc(sub.join('. ').replace(/\.\./g,'.'))+'</span></div><div class="db-t">'+(iT>-1?c[iT].innerHTML:'')+'</div><div class="db-p">'+(iP>-1?((/¥/.test(L[iP])&&/^\d/.test(txt(c[iP]))?'¥':'')+c[iP].innerHTML):'')+'</div>';box.appendChild(row)});
+ var w=wrapOf(t);w.parentNode.insertBefore(box,w);hide(t,w)}
+
+function menu(t,H){var L=H.lab,iP=col(L,/מחיר/),iW=col(L,/איפה/);var box=el('div','mn');box.innerHTML='<span class="mn-t" aria-hidden="true" lang="ja">お品書き</span>';
+ H.body.forEach(function(r){var c=r.cells,n=txt(c[0]),k=pick(DISH,n);var i=el('div','mn-i');i.innerHTML='<div class="mn-l"><b>'+c[0].innerHTML+'</b>'+(k?'<span class="jp" lang="ja">'+k+'</span>':'')+'<i aria-hidden="true"></i><span class="p">'+(iP>-1?esc(txt(c[iP])):'')+'</span></div>'+(iW>-1&&txt(c[iW])?'<p class="mn-w">'+c[iW].innerHTML+'</p>':'');box.appendChild(i)});
+ var w=wrapOf(t);w.parentNode.insertBefore(box,w);hide(t,w)}
+
+function timetable(t,H){var w=t.parentElement;if(w&&(w.classList.contains('tbl')||w.classList.contains('jt'))&&w.children.length===1){w.className='tt'}else{w=el('div','tt');t.parentNode.insertBefore(w,t);w.appendChild(t)}
+ t.classList.remove('tbl');if(H.hr){if(H.hr.parentNode.tagName!=='THEAD')H.hr.classList.add('jh');[].forEach.call(H.hr.cells,function(c){var g=gloss(txt(c));if(g&&!c.querySelector('.jp')){var s=el('small','jp',g);s.setAttribute('lang','ja');c.appendChild(s)}})}
+ var numCol={};
+ H.body.forEach(function(r){var k=0;[].forEach.call(r.cells,function(c,i){var L=H.lab[k]||'';k+=c.colSpan||1;if(i===0)return;c.setAttribute('data-label',L);var tx=txt(c);
+  if(/^[~≈כ\-]?\s*[¥₪$€]?\s*[\d][\d,.\s:]*([–\-~]\s*[¥₪$€]?[\d,.\s:]+)?\s*(₪|¥|דק׳|דק'|דקות|ש׳|שעות|ימים|ק״מ|%|°)?$/.test(tx)&&tx.length<26){c.classList.add('n');if(!/[֐-׿]/.test(tx))c.classList.add('l')}else if(tx.length>34)c.classList.add('tx');
+  var m=tx.match(/^(לא משתלם|משתלם|כמעט מאוזן|כמעט)/);
+  var v=el('span','jv');while(c.firstChild)v.appendChild(c.firstChild);c.appendChild(v);
+  if(m){var mk=el('span','mk'+(m[1]==='משתלם'?' ok':''),m[1]==='משתלם'?'●':m[1]==='לא משתלם'?'—':'○');mk.setAttribute('aria-hidden','true');v.insertBefore(mk,v.firstChild)}
+ })})}
+
+function run(){var ts=document.querySelectorAll('.lp-main table,.blk table,.prose table,main article table');if(!ts.length)return;ensureCss();ensureFonts();
+ [].forEach.call(ts,function(t){if(t.dataset.tt)return;t.dataset.tt='1';var H=headersOf(t);if(!H.body.length)return;var L=H.lab,f=L[0]||'';
+  try{
+   if(/^אזור$/.test(f)&&col(L,/מתאים|למי/)>-1)return stations(t,H);
+   if(/^אם הטיול/.test(f)&&L.length===2)return pickList(t,H);
+   if(/^יעד$/.test(f)&&col(L,/זמן נסיעה/)>-1&&col(L,/הלוך|מחיר/)>-1)return board(t,H);
+   if(/^מאכל$/.test(f)&&col(L,/מחיר/)>-1)return menu(t,H);
+  }catch(e){}
+  timetable(t,H)})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();setTimeout(run,1500)})();
